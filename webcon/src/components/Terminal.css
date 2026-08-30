@@ -1,0 +1,79 @@
+.terminal {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #161b22;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.terminal-body {
+  padding: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #c9d1d9;
+}
+
+.terminal-body .stdout {
+  color: #c9d1d9;
+}
+
+.terminal-body .stderr {
+  color: #f85149;
+}
+
+.terminal-body .exit-ok {
+  color: #3fb950;
+}
+
+.terminal-body .exit-fail {
+  color: #f85149;
+}
+
+.terminal-body .meta {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.terminal-empty {
+  color: #484f58;
+  font-style: italic;
+}
+
+.terminal-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: #161b22;
+}
+
+.terminal-input {
+  flex: 1;
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: #c9d1d9;
+  font-family: inherit;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.terminal-input:focus {
+  border-color: var(--accent);
+}

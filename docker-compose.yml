@@ -1,21 +1,18 @@
 services:
   agent-tool-server:
-    build: .
-    image: agent-tools:latest
-    container_name: agent-tool-server
+    image: agent-tools:v0.0.4
+    container_name: agent-tools
     restart: unless-stopped
-    # No host port mapping required when the Agent shares agent-network.
+    ports:
+      - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./aifile:/aifile
       - ./userfile:/userfile
-      # Enable only when /commandpc is configured:
-      # - ./ssh:/run/agent-ssh:ro
-      - /proc:/hostproc:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      APP_VERSION: ${APP_VERSION:-0.3.0}
+      APP_VERSION: ${APP_VERSION:-0.4.0}
       COMMANDPC_HOST: ${COMMANDPC_HOST:-host.docker.internal}
       COMMANDPC_PORT: ${COMMANDPC_PORT:-22}
       COMMANDPC_USER: ${COMMANDPC_USER:-agentpc}

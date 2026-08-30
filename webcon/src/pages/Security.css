@@ -1,0 +1,73 @@
+.security-section {
+  margin-bottom: 24px;
+}
+
+.security-desc {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 0 0 12px 0;
+}
+
+.security-empty {
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.security-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.security-config {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.security-config-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.security-config-row:last-child {
+  border-bottom: none;
+}
+
+.security-config-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 160px;
+  flex-shrink: 0;
+}
+
+.security-config-row code {
+  background: var(--input-bg);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.security-info-list {
+  margin: 0;
+  padding: 0 0 0 20px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.8;
+}
+
+.security-info-list code {
+  background: var(--input-bg);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}

@@ -1,3 +1,20 @@
+FROM ubuntu:24.04 AS webcon-builder
+
+ENV DEBIAN_FRONTEND=noninteractive TZ=UTC
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl && \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /webcon
+COPY webcon/package.json webcon/package-lock.json ./
+RUN npm ci
+COPY webcon/ ./
+RUN npm run build
+
+
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.source="https://github.com/syuankai/agent-tools" \
@@ -10,7 +27,7 @@ ENV DEBIAN_FRONTEND=noninteractive TZ=UTC \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl wget git jq ripgrep fd-find tree less vim-tiny nano \
-    python3 python3-pip python3-venv python3-dev build-essential nodejs npm \
+    python3 python3-pip python3-venv python3-dev build-essential \
     openssh-client zip unzip tar gzip bzip2 xz-utils procps iproute2 iputils-ping \
     dnsutils net-tools && rm -rf /var/lib/apt/lists/*
 
@@ -31,6 +48,9 @@ RUN python3 -m pip install --break-system-packages --no-cache-dir -r requirement
 COPY app /app/app
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod 755 /app/entrypoint.sh && chown -R agent:agent /app
+
+COPY --from=webcon-builder /webcon/dist /app/static
+RUN chown -R agent:agent /app/static
 
 EXPOSE 8080
 ENTRYPOINT ["/app/entrypoint.sh"]

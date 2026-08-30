@@ -1,0 +1,128 @@
+.apidocs-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.apidocs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.apidocs-table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--surface);
+}
+
+.apidocs-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.apidocs-method {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: monospace;
+  text-transform: uppercase;
+}
+
+.apidocs-method.get {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.apidocs-method.post {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.apidocs-path code {
+  background: var(--input-bg);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.apidocs-desc {
+  color: var(--text-secondary);
+}
+
+.apidocs-future {
+  opacity: 0.6;
+}
+
+.apidocs-future-row {
+  font-style: italic;
+}
+
+.apidocs-responses {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.apidocs-response-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.apidocs-response-item:last-child {
+  border-bottom: none;
+}
+
+.apidocs-response-key {
+  font-weight: 600;
+  color: var(--text);
+  min-width: 180px;
+}
+
+.apidocs-response-desc {
+  color: var(--text-secondary);
+}
+
+.apidocs-limits {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.apidocs-limit-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.apidocs-limit-item:last-child {
+  border-bottom: none;
+}
+
+.apidocs-limit-item code {
+  background: var(--input-bg);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  min-width: 200px;
+}
