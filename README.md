@@ -1,8 +1,8 @@
-# AI Agent Tool Server v0.0.4
+# AI Agent Tool Server v0.5.0
 
 Lightweight Ubuntu 24.04 HTTP tool server for AI agents.
 
-v0.0.4 removes Docker Compose from the distribution and adds GitHub Actions CI/CD. The repository can build and publish a multi-platform image automatically to GitHub Container Registry (GHCR).
+v0.5.0 adds structured read-only file tools (`/file/list`, `/file/read`, `/file/search`, `/file/metadata`) and system info (`/system/info`), so Agents can operate on files without composing shell commands.
 
 ## Pull the image
 
@@ -21,12 +21,12 @@ docker pull ghcr.io/syuankai/agent-tools:latest
 A version tag can also be used after a Git tag is pushed, for example:
 
 ```bash
-docker pull ghcr.io/syuankai/agent-tools:0.0.4
+docker pull ghcr.io/syuankai/agent-tools:0.5.0
 ```
 
 ## GitHub Actions
 
-Every push to `main` builds and publishes `latest`. A Git tag such as `v0.0.4` publishes version tags as well. The workflow builds both `linux/amd64` and `linux/arm64`, uses the GitHub Actions cache, and publishes SBOM/provenance metadata.
+Every push to `main` builds and publishes `latest`. A Git tag such as `v0.5.0` publishes version tags as well. The workflow builds both `linux/amd64` and `linux/arm64`, uses the GitHub Actions cache, and publishes SBOM/provenance metadata.
 
 The workflow is in:
 
@@ -47,7 +47,7 @@ If the package is private, users must authenticate to GHCR before pulling it.
 Create the host directories:
 
 ```bash
-mkdir -p ./aifile ./userfile ./ssh
+mkdir -p ./aifile ./userfile ./workspace ./ssh
 ```
 
 Copy and edit the environment file:
@@ -73,6 +73,7 @@ docker run -d \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v "$(pwd)/aifile:/aifile" \
   -v "$(pwd)/userfile:/userfile" \
+  -v "$(pwd)/workspace:/workspace" \
   -v /proc:/hostproc:ro \
   -v "$(pwd)/ssh:/run/agent-ssh:ro" \
   --env-file .env \
@@ -95,12 +96,13 @@ http://agent-tool-server:8080
 
 ## Volumes
 
-Required for the intended v0.0.4 setup:
+Required for the intended v0.5.0 setup:
 
 ```text
 /var/run/docker.sock:/var/run/docker.sock
 ./aifile:/aifile
 ./userfile:/userfile
+./workspace:/workspace
 /proc:/hostproc:ro
 ```
 
@@ -133,6 +135,9 @@ Important values:
 | `MAX_TOOL_CALLS` | `20` | Per `X-Agent-Task-ID` budget |
 | `MAX_OUTPUT_SIZE` | `1048576` | Maximum returned command output |
 | `MAX_FILE_SIZE` | `104857600` | Maximum `/getfile` download |
+| `MAX_DIR_ENTRIES` | `1000` | Maximum entries returned by `/file/list` |
+| `MAX_SEARCH_RESULTS` | `500` | Maximum matches returned by `/file/search` |
+| `MAX_SEARCH_DEPTH` | `10` | Maximum directory depth for `/file/search` |
 | `ENV_ALLOWLIST` | `AGENT_NAME,AGENT_VERSION,TOOL_SERVER_NAME,BLOCK` | Variables exposed by `/env` |
 
 ## Global command blocking
@@ -149,23 +154,60 @@ The policy checks command structure rather than only doing a substring search, i
 
 ## Endpoints
 
+### Structured File Tools (v0.5.0)
+
+- `POST /file/list` — list directory contents as structured JSON.
+- `POST /file/read` — read a file's content as structured JSON.
+- `POST /file/search` — search for files using glob patterns.
+- `POST /file/metadata` — get file/directory metadata as structured JSON.
+- `GET /system/info` — get system information (OS, CPU, memory, disk).
+
+### Shell / Command Tools (v0.4.x)
+
 - `POST /command` — execute a command inside the tool-server container.
-- `POST /file` — file operations inside the tool-server container.
+- `POST /file` — alias for `/command`.
 - `POST /docker` — Docker CLI through `/var/run/docker.sock`.
 - `POST /filepc` — operate inside the configured `/userfile` host directory through a temporary helper container.
 - `POST /commandpc` — temporary SSH connection to the configured non-sudo host account.
 - `POST /proc` — read-only host `/proc` access through `/hostproc`.
 - `POST /getfile` — download HTTP/HTTPS files into `/aifile` with SSRF and size protections.
+
+### Utility
+
 - `GET /env` — read allowlisted container environment variables with redaction.
 - `GET /health` — unauthenticated health check.
 - `GET /stats` — authenticated local statistics.
 - `GET /help` — public API help.
+- `GET /tools` — Agent auto-discovery catalog with tool definitions.
 
 Except `/help` and `/health`, endpoints require:
 
 ```http
 Authorization: Bearer YOUR_API_KEY
 ```
+
+### Tool Selection Guide
+
+When an Agent needs to work with files, prefer structured tools over shell commands:
+
+| Task | Use | Don't Use |
+|---|---|---|
+| List directory | `POST /file/list` | `POST /command` with `ls` |
+| Read file | `POST /file/read` | `POST /command` with `cat` |
+| Find files | `POST /file/search` | `POST /command` with `find` |
+| File metadata | `POST /file/metadata` | `POST /command` with `stat` |
+| System info | `GET /system/info` | `POST /command` with `uname`/`free`/`df` |
+
+## Security
+
+- Structured file tools are restricted to `/workspace` and `/userfile` roots.
+- Symlink escapes outside allowed roots are blocked.
+- Binary files are detected and rejected by `/file/read`.
+- Path traversal (`..`) is normalized and blocked.
+- Command blocklist applies to all shell-capable endpoints.
+- Docker mutations are disabled by default.
+- SSRF protection blocks downloads to private/internal IPs.
+- Rate limiting and concurrency limits protect against abuse.
 
 ## Security warning
 
