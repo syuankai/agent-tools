@@ -1,203 +1,101 @@
-# AI Agent Tool Server v0.3
+# AI Agent Tool Server v0.0.4
 
-Lightweight Ubuntu 24.04 HTTP tool server for AI Agents.
+Lightweight Ubuntu 24.04 HTTP tool server for AI agents.
 
-## What v0.3 adds
+v0.0.4 removes Docker Compose from the distribution and adds GitHub Actions CI/CD. The repository can build and publish a multi-platform image automatically to GitHub Container Registry (GHCR).
 
-- Global `BLOCK` command deny-list.
-- `rm` is permanently blocked and cannot be removed from policy.
-- Rate limiting with `429` + `Retry-After`.
-- Global concurrent-tool limit.
-- Request body and command-output limits.
-- Command execution timeouts.
-- Safer Docker mutation policy; mutations are disabled by default.
-- `/env` for allowlisted container environment variables with secret redaction.
-- `/health`, `/stats`, and expanded `/help`.
-- `/getfile` redirect-by-redirect SSRF checks and download-size limits.
-- `/filepc` path restrictions for the `/userfile` area.
-- Request IDs via `X-Request-ID`.
-- Optional per-task tool-call budget via `X-Agent-Task-ID` + `MAX_TOOL_CALLS`.
-- No host port 8080 mapping is required when the Agent shares `agent-network`.
+## Pull the image
 
-## Build
+The default image is:
+
+```text
+ghcr.io/syuankai/agent-tools:latest
+```
+
+If the package is public:
+
+```bash
+docker pull ghcr.io/syuankai/agent-tools:latest
+```
+
+A version tag can also be used after a Git tag is pushed, for example:
+
+```bash
+docker pull ghcr.io/syuankai/agent-tools:0.0.4
+```
+
+## GitHub Actions
+
+Every push to `main` builds and publishes `latest`. A Git tag such as `v0.0.4` publishes version tags as well. The workflow builds both `linux/amd64` and `linux/arm64`, uses the GitHub Actions cache, and publishes SBOM/provenance metadata.
+
+The workflow is in:
+
+```text
+.github/workflows/docker-publish.yml
+```
+
+GitHub's `GITHUB_TOKEN` is used for GHCR authentication; no Docker Hub account is required. GitHub Packages publishing requires the workflow to have `packages: write` permission. See the official GitHub and Docker documentation for GHCR and Docker Actions. 
+
+## First-time GHCR setup
+
+After the first successful workflow run, open the published package under the repository/account's Packages and make it public if you want users to pull it without authentication.
+
+If the package is private, users must authenticate to GHCR before pulling it.
+
+## Run without Compose
+
+Create the host directories:
+
+```bash
+mkdir -p ./aifile ./userfile ./ssh
+```
+
+Copy and edit the environment file:
 
 ```bash
 cp .env.example .env
-mkdir -p aifile userfile
-# Edit .env, especially API_KEY and USERFILE_HOST_PATH.
-docker build -t agent-tools:latest .
 ```
 
-## Run
+For `/commandpc`, put the SSH private key at:
+
+```text
+./ssh/id_ed25519
+```
+
+Then run the container directly:
 
 ```bash
-docker compose up -d
+docker run -d \
+  --name agent-tool-server \
+  --restart unless-stopped \
+  --add-host host.docker.internal:host-gateway \
+  --network agent-network \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$(pwd)/aifile:/aifile" \
+  -v "$(pwd)/userfile:/userfile" \
+  -v /proc:/hostproc:ro \
+  -v "$(pwd)/ssh:/run/agent-ssh:ro" \
+  --env-file .env \
+  ghcr.io/syuankai/agent-tools:latest
 ```
 
-The API listens on `0.0.0.0:8080` inside the container. If the Agent is attached to `agent-network`, use:
+If the Agent uses a different Docker network, replace `agent-network` with that network. No host `8080:8080` mapping is required when the Agent can reach this container on the same Docker network.
+
+The API listens inside the container on:
+
+```text
+0.0.0.0:8080
+```
+
+From another container on the same network, use:
 
 ```text
 http://agent-tool-server:8080
 ```
 
-Do not publish `8080:8080` unless you intentionally need host access.
-
-## Authentication
-
-All tool endpoints except `GET /help` and `GET /health` require:
-
-```http
-Authorization: Bearer YOUR_API_KEY
-```
-
-## Endpoints
-
-### `POST /command`
-
-Runs a shell command inside this container, from `/workspace`.
-
-```text
-echo hello
-```
-
-Successful empty output returns `All done.` with status 200.
-
-### `POST /file`
-
-Same execution environment as `/command`, intended for file operations inside the Tool Server container.
-
-### `POST /docker`
-
-Runs Docker CLI commands through the mounted `/var/run/docker.sock`.
-
-By default, mutating Docker operations such as `run`, `exec`, `stop`, `rm`, `rmi`, `build`, `push`, and `pull` are denied. Set `ALLOW_DOCKER_MUTATION=true` only when you intentionally want this capability.
-
-### `POST /filepc`
-
-Runs a disposable restricted Ubuntu helper container with the configured host directory mounted as `/userfile`.
-
-Set:
-
-```env
-USERFILE_HOST_PATH=/home/syuankai
-```
-
-The command must stay within `/userfile`; path traversal and namespace-changing operations are rejected.
-
-### `POST /commandpc`
-
-Creates a temporary SSH connection to the configured host account.
-
-```env
-COMMANDPC_HOST=host.docker.internal
-COMMANDPC_PORT=22
-COMMANDPC_USER=agentpc
-COMMANDPC_KEY_FILE=/run/agent-ssh/id_ed25519
-```
-
-Mount a trusted SSH key and `known_hosts` when enabling this feature. Host-key verification is required; the server does not accept unknown host keys.
-
-### `POST /proc`
-
-Reads host `/proc` through the read-only `/hostproc` mount. The command parser only permits a small read-oriented command set and rejects write/exec patterns.
-
-### `POST /getfile`
-
-Downloads a public HTTP/HTTPS URL into `/aifile`.
-
-Redirects are checked individually. Loopback, private, link-local, reserved, multicast, and unspecified addresses are rejected. The download is limited by `MAX_FILE_SIZE`.
-
-### `GET /env`
-
-Returns only variables listed in `ENV_ALLOWLIST`.
-
-Example:
-
-```env
-ENV_ALLOWLIST=AGENT_NAME,AGENT_VERSION,TOOL_SERVER_NAME,BLOCK
-ENV_REDACT=true
-ENV_REDACT_PATTERNS=KEY,TOKEN,PASSWORD,SECRET,CREDENTIAL
-```
-
-Secret-looking variable names are returned as `[REDACTED]` by default. An empty allowlist returns no variables.
-
-### `GET /health`
-
-Unauthenticated health check.
-
-### `GET /stats`
-
-Authenticated in-process statistics. It does not record command contents.
-
-### `GET /help`
-
-Public machine-readable API help, including the active blocked-command list.
-
-
-### Agent task budget
-
-For a multi-tool task, the Agent can send a stable header:
-
-```http
-X-Agent-Task-ID: 2026-08-30-task-001
-```
-
-The server counts tool requests for that task and returns `429` once `MAX_TOOL_CALLS` is reached. Without this header, the normal rate limiter still applies.
-
-## Global command blocklist
-
-Set the container environment variable:
-
-```env
-BLOCK=rm,apt,command,npm
-```
-
-This policy is applied to command-capable endpoints (`/command`, `/file`, `/filepc`, `/commandpc`, and `/docker`). It is checked before execution and is intentionally conservative. `rm` is always blocked even if it is omitted from `BLOCK`.
-
-For example, with `BLOCK=rm,apt,npm`:
-
-```text
-rm file.txt          -> 403
-/usr/bin/rm file.txt -> 403
-apt update            -> 403
-npm install           -> 403
-ls -la                -> allowed
-```
-
-The policy also catches common shell nesting such as `bash -c 'rm ...'` rather than relying only on the first token.
-
-## Environment variables
-
-| Variable | Default | Purpose |
-|---|---:|---|
-| `API_KEY` | required | API authentication secret |
-| `APP_VERSION` | `0.3.0` | Reported application version |
-| `BLOCK` | `rm` | Global custom command blocklist |
-| `RATE_LIMIT_REQUESTS` | `30` | Requests per authorization key per window |
-| `RATE_LIMIT_WINDOW` | `60` | Rate-limit window in seconds |
-| `MAX_TOOL_CALLS` | `20` | Maximum calls for one `X-Agent-Task-ID` task |
-| `MAX_CONCURRENT_TOOLS` | `4` | Maximum simultaneous requests executing through the server |
-| `MAX_BODY_BYTES` | `65536` | Maximum request body |
-| `MAX_OUTPUT_SIZE` | `1048576` | Maximum command output returned |
-| `COMMAND_TIMEOUT` | `30` | `/command` and `/file` timeout |
-| `COMMANDPC_TIMEOUT` | `30` | Remote SSH command timeout |
-| `FILEPC_TIMEOUT` | `120` | `/filepc` timeout |
-| `DOCKER_TIMEOUT` | `120` | `/docker` timeout |
-| `DOWNLOAD_TIMEOUT` | `300` | `/getfile` timeout |
-| `MAX_FILE_SIZE` | `104857600` | `/getfile` maximum file size |
-| `ALLOW_DOCKER_MUTATION` | `false` | Allow Docker-changing operations |
-| `FILEPC_IMAGE` | `ubuntu:24.04` | Helper image for `/filepc` |
-| `USERFILE_HOST_PATH` | required | Host path exposed as `/userfile` |
-| `COMMANDPC_HOST` | `host.docker.internal` | SSH host |
-| `COMMANDPC_PORT` | `22` | SSH port |
-| `COMMANDPC_USER` | `agentpc` | Dedicated host user |
-| `COMMANDPC_KEY_FILE` | `/run/agent-ssh/id_ed25519` | SSH private key path inside container |
-| `ENV_REDACT` | `true` | Redact secret-looking `/env` variables |
-| `ENV_ALLOWLIST` | empty | Variables visible through `/env` |
-| `ENV_DENYLIST` | empty | Variables denied even if allowlisted |
-| `ENV_REDACT_PATTERNS` | `KEY,TOKEN,PASSWORD,SECRET,CREDENTIAL` | Secret-name patterns |
-
 ## Volumes
+
+Required for the intended v0.0.4 setup:
 
 ```text
 /var/run/docker.sock:/var/run/docker.sock
@@ -206,16 +104,73 @@ The policy also catches common shell nesting such as `bash -c 'rm ...'` rather t
 /proc:/hostproc:ro
 ```
 
-Optional for `/commandpc`:
+For `/commandpc`:
 
 ```text
 ./ssh:/run/agent-ssh:ro
 ```
 
-## Security notes
+`./ssh` is only needed when `/commandpc` is enabled.
+
+## Environment variables
+
+The complete example is in `.env.example`.
+
+Important values:
+
+| Variable | Default | Purpose |
+|---|---:|---|
+| `API_KEY` | required | API authentication |
+| `BLOCK` | `rm` | Global command blocklist |
+| `USERFILE_HOST_PATH` | required by `/filepc` | Host path mounted into the temporary `/filepc` helper |
+| `COMMANDPC_HOST` | `host.docker.internal` | Host SSH address |
+| `COMMANDPC_USER` | `agentpc` | Dedicated non-sudo host account |
+| `COMMANDPC_KEY_FILE` | `/run/agent-ssh/id_ed25519` | SSH private key inside the container |
+| `ALLOW_DOCKER_MUTATION` | `false` | Allow Docker-changing operations |
+| `RATE_LIMIT_REQUESTS` | `30` | Requests per rate window |
+| `RATE_LIMIT_WINDOW` | `60` | Rate window in seconds |
+| `MAX_CONCURRENT_TOOLS` | `4` | Simultaneous tool executions |
+| `MAX_TOOL_CALLS` | `20` | Per `X-Agent-Task-ID` budget |
+| `MAX_OUTPUT_SIZE` | `1048576` | Maximum returned command output |
+| `MAX_FILE_SIZE` | `104857600` | Maximum `/getfile` download |
+| `ENV_ALLOWLIST` | `AGENT_NAME,AGENT_VERSION,TOOL_SERVER_NAME,BLOCK` | Variables exposed by `/env` |
+
+## Global command blocking
+
+Set:
+
+```env
+BLOCK=rm,apt,command,npm
+```
+
+The blocklist applies to command-capable endpoints. `rm` is permanently blocked even if it is omitted from `BLOCK`.
+
+The policy checks command structure rather than only doing a substring search, including common shell nesting and command chaining.
+
+## Endpoints
+
+- `POST /command` — execute a command inside the tool-server container.
+- `POST /file` — file operations inside the tool-server container.
+- `POST /docker` — Docker CLI through `/var/run/docker.sock`.
+- `POST /filepc` — operate inside the configured `/userfile` host directory through a temporary helper container.
+- `POST /commandpc` — temporary SSH connection to the configured non-sudo host account.
+- `POST /proc` — read-only host `/proc` access through `/hostproc`.
+- `POST /getfile` — download HTTP/HTTPS files into `/aifile` with SSRF and size protections.
+- `GET /env` — read allowlisted container environment variables with redaction.
+- `GET /health` — unauthenticated health check.
+- `GET /stats` — authenticated local statistics.
+- `GET /help` — public API help.
+
+Except `/help` and `/health`, endpoints require:
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Security warning
 
 Mounting `/var/run/docker.sock` gives the container very high control over the Docker daemon. Treat this service as privileged infrastructure.
 
-The `/commandpc` account should be a dedicated, non-sudo host account with only the permissions you intentionally grant it.
+The `/commandpc` account should be a dedicated host account without sudo and with only the filesystem permissions you intentionally grant it.
 
-The in-process rate limiter and statistics are local to one server process. For multiple replicas, put a shared rate limiter/reverse proxy in front.
+Do not put secrets in `ENV_ALLOWLIST`. Secret-looking names are redacted by default, but the safest practice is not to expose secrets to `/env` at all.

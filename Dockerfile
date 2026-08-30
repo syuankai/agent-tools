@@ -1,5 +1,10 @@
 FROM ubuntu:24.04
 
+LABEL org.opencontainers.image.source="https://github.com/syuankai/agent-tools" \
+      org.opencontainers.image.title="AI Agent Tool Server" \
+      org.opencontainers.image.description="Lightweight Ubuntu HTTP tool server for AI agents" \
+      org.opencontainers.image.licenses="MIT"
+
 ENV DEBIAN_FRONTEND=noninteractive TZ=UTC \
     PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
