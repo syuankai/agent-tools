@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Body, Header, HTTPException
 import os
 import shlex
 import subprocess
@@ -8,7 +8,7 @@ from app.security.command_policy import check_command
 router = APIRouter()
 
 @router.post("/docker")
-async def docker(body: str, authorization: str | None = Header(None)):
+async def docker(body: str = Body(...), authorization: str | None = Header(None)):
     auth(authorization)
     try:
         args = shlex.split(body)
@@ -26,6 +26,7 @@ async def docker(body: str, authorization: str | None = Header(None)):
         if len(args) > 1 and args[1] in {
             "run", "create", "start", "stop", "restart", "kill", "rm", "rmi",
             "rename", "update", "exec", "cp", "build", "push", "pull",
+            "compose",
         }:
             raise HTTPException(403, f"Docker mutation is disabled: {args[1]}")
 

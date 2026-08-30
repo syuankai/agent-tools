@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Body, Header, HTTPException
 import os
 import subprocess
 from app.security.common import auth, result, trim_output
@@ -7,7 +7,7 @@ from app.security.command_policy import check_command
 router = APIRouter()
 
 @router.post("/file")
-async def file(body: str, authorization: str | None = Header(None)):
+async def file(body: str = Body(...), authorization: str | None = Header(None)):
     auth(authorization)
     ok, blocked = check_command(body)
     if not ok:

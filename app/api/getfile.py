@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Body, Header, HTTPException
 import ipaddress
 import os
 import re
@@ -43,7 +43,7 @@ def _resolve_public(host: str, port: int) -> None:
 
 
 @router.post("/getfile")
-async def getfile(body: str, authorization: str | None = Header(None)):
+async def getfile(body: str = Body(...), authorization: str | None = Header(None)):
     auth(authorization)
     url = body.strip()
     u = urlparse(url)

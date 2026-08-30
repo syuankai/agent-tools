@@ -16,7 +16,7 @@ def result(output="", code=0):
     output = output or ""
     if code == 0:
         return {"status": 200, "output": output or "All done."}
-    return {"status": 500, "output": output or "Command failed.", "exit_code": code}
+    return {"status": 200, "output": output or "Command failed.", "exit_code": code}
 
 
 def output_limit() -> int:

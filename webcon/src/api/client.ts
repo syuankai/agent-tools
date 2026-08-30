@@ -66,32 +66,36 @@ export async function getEnv() {
   return request<unknown>("GET", "/env");
 }
 
+export async function getTools() {
+  return request<unknown>("GET", "/tools");
+}
+
 export async function executeCommand(command: string) {
-  return request<ApiResponse>("/command", "POST", command);
+  return request<ApiResponse>("POST", "/command", command);
 }
 
 export async function executeFile(command: string) {
-  return request<ApiResponse>("/file", "POST", command);
+  return request<ApiResponse>("POST", "/file", command);
 }
 
 export async function executeFilepc(command: string) {
-  return request<ApiResponse>("/filepc", "POST", command);
+  return request<ApiResponse>("POST", "/filepc", command);
 }
 
 export async function executeCommandpc(command: string) {
-  return request<ApiResponse>("/commandpc", "POST", command);
+  return request<ApiResponse>("POST", "/commandpc", command);
 }
 
 export async function executeProc(command: string) {
-  return request<ApiResponse>("/proc", "POST", command);
+  return request<ApiResponse>("POST", "/proc", command);
 }
 
 export async function executeDocker(command: string) {
-  return request<ApiResponse>("/docker", "POST", command);
+  return request<ApiResponse>("POST", "/docker", command);
 }
 
 export async function downloadFile(url: string) {
-  return request<ApiResponse>("/getfile", "POST", url);
+  return request<ApiResponse>("POST", "/getfile", url);
 }
 
 export { ApiError };

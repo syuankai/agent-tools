@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Body, Header, HTTPException
 import os
 import subprocess
 from app.security.common import auth, result, trim_output
@@ -9,7 +9,7 @@ router = APIRouter()
 FILEPC_IMAGE = os.getenv("FILEPC_IMAGE", "ubuntu:24.04")
 
 @router.post("/filepc")
-async def filepc(body: str, authorization: str | None = Header(None)):
+async def filepc(body: str = Body(...), authorization: str | None = Header(None)):
     auth(authorization)
     if not body.strip():
         raise HTTPException(400, "Command required.")
