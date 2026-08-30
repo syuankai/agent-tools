@@ -22,6 +22,11 @@ from app.api.env import router as env_router
 from app.api.health import router as health_router
 from app.api.stats import router as stats_router
 from app.api.tools import router as tools_router
+from app.api.file_list import router as file_list_router
+from app.api.file_read import router as file_read_router
+from app.api.file_search import router as file_search_router
+from app.api.file_metadata import router as file_metadata_router
+from app.api.system_info import router as system_info_router
 from app import stats
 
 app = FastAPI(
@@ -50,6 +55,8 @@ _index_html: str | None = None
 _API_RATE_LIMIT_PATHS = frozenset({
     "/command", "/file", "/filepc", "/commandpc",
     "/proc", "/docker", "/getfile", "/stats", "/env",
+    "/file/list", "/file/read", "/file/search", "/file/metadata",
+    "/system/info",
 })
 
 
@@ -152,6 +159,8 @@ for r in [
     command_router, file_router, filepc_router, docker_router,
     getfile_router, commandpc_router, proc_router, help_router,
     env_router, health_router, stats_router, tools_router,
+    file_list_router, file_read_router, file_search_router,
+    file_metadata_router, system_info_router,
 ]:
     app.include_router(r)
 

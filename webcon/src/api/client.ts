@@ -70,6 +70,26 @@ export async function getTools() {
   return request<unknown>("GET", "/tools");
 }
 
+export async function listFiles(path: string) {
+  return request<ApiResponse>("POST", "/file/list", JSON.stringify({ path }));
+}
+
+export async function readFile(path: string) {
+  return request<ApiResponse>("POST", "/file/read", JSON.stringify({ path }));
+}
+
+export async function searchFiles(path: string, pattern: string, type: string = "file") {
+  return request<ApiResponse>("POST", "/file/search", JSON.stringify({ path, pattern, type }));
+}
+
+export async function getFileMetadata(path: string) {
+  return request<ApiResponse>("POST", "/file/metadata", JSON.stringify({ path }));
+}
+
+export async function getSystemInfo() {
+  return request<unknown>("GET", "/system/info");
+}
+
 export async function executeCommand(command: string) {
   return request<ApiResponse>("POST", "/command", command);
 }
