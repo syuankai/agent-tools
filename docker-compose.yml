@@ -1,0 +1,48 @@
+services:
+  agent-tool-server:
+    build: .
+    image: agent-tools:latest
+    container_name: agent-tool-server
+    restart: unless-stopped
+    # No host port mapping required when the Agent shares agent-network.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./aifile:/aifile
+      - ./userfile:/userfile
+      # Enable only when /commandpc is configured:
+      # - ./ssh:/run/agent-ssh:ro
+      - /proc:/hostproc:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      APP_VERSION: ${APP_VERSION:-0.3.0}
+      COMMANDPC_HOST: ${COMMANDPC_HOST:-host.docker.internal}
+      COMMANDPC_PORT: ${COMMANDPC_PORT:-22}
+      COMMANDPC_USER: ${COMMANDPC_USER:-agentpc}
+      COMMANDPC_KEY_FILE: ${COMMANDPC_KEY_FILE:-/run/agent-ssh/id_ed25519}
+      API_KEY: ${API_KEY:?set API_KEY}
+      RATE_LIMIT_REQUESTS: ${RATE_LIMIT_REQUESTS:-30}
+      RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-60}
+      MAX_CONCURRENT_TOOLS: ${MAX_CONCURRENT_TOOLS:-4}
+      MAX_BODY_BYTES: ${MAX_BODY_BYTES:-65536}
+      MAX_TOOL_CALLS: ${MAX_TOOL_CALLS:-20}
+      COMMAND_TIMEOUT: ${COMMAND_TIMEOUT:-30}
+      COMMANDPC_TIMEOUT: ${COMMANDPC_TIMEOUT:-30}
+      FILEPC_TIMEOUT: ${FILEPC_TIMEOUT:-120}
+      DOCKER_TIMEOUT: ${DOCKER_TIMEOUT:-120}
+      DOWNLOAD_TIMEOUT: ${DOWNLOAD_TIMEOUT:-300}
+      MAX_OUTPUT_SIZE: ${MAX_OUTPUT_SIZE:-1048576}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-104857600}
+      ALLOW_DOCKER_MUTATION: ${ALLOW_DOCKER_MUTATION:-false}
+      FILEPC_IMAGE: ${FILEPC_IMAGE:-ubuntu:24.04}
+      USERFILE_HOST_PATH: ${USERFILE_HOST_PATH:?set USERFILE_HOST_PATH}
+      ENV_REDACT: ${ENV_REDACT:-true}
+      ENV_ALLOWLIST: ${ENV_ALLOWLIST:-AGENT_NAME,AGENT_VERSION,TOOL_SERVER_NAME,BLOCK}
+      ENV_DENYLIST: ${ENV_DENYLIST:-}
+      ENV_REDACT_PATTERNS: ${ENV_REDACT_PATTERNS:-KEY,TOKEN,PASSWORD,SECRET,CREDENTIAL}
+      BLOCK: ${BLOCK:-rm}
+    networks: [agent-network]
+
+networks:
+  agent-network:
+    name: agent-network
