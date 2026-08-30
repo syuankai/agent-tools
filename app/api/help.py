@@ -7,7 +7,7 @@ router = APIRouter()
 @router.get("/help")
 async def help():
     return {
-        "version": os.getenv("APP_VERSION", "0.3.0"),
+        "version": os.getenv("APP_VERSION", "0.0.4"),
         "endpoints": {
             "POST /docker": "Execute a Docker command through the mounted Docker socket; Docker mutations are disabled by default.",
             "POST /file": "Execute file/shell operations inside the Tool Server; system/custom blocked commands are forbidden.",

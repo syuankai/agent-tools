@@ -22,7 +22,7 @@ from app.api.health import router as health_router
 from app.api.stats import router as stats_router
 from app import stats
 
-app = FastAPI(title="AI Agent Tool Server", version=os.getenv("APP_VERSION", "0.3.0"))
+app = FastAPI(title="AI Agent Tool Server", version=os.getenv("APP_VERSION", "0.0.4"))
 
 RATE_LIMIT_REQUESTS = max(1, int(os.getenv("RATE_LIMIT_REQUESTS", "30")))
 RATE_LIMIT_WINDOW = max(1, int(os.getenv("RATE_LIMIT_WINDOW", "60")))
