@@ -13,7 +13,7 @@ def _env_int(name: str, default: int) -> int:
 @router.get("/help")
 async def help():
     return {
-        "version": os.getenv("APP_VERSION", "0.0.4"),
+        "version": os.getenv("APP_VERSION", "0.0.5"),
         "endpoints": {
             "POST /command": "Execute commands inside the Tool Server; system/custom blocked commands are forbidden. /command and /file behave identically.",
             "POST /file": "Alias for /command. Executes shell commands inside the Tool Server with the same policy.",

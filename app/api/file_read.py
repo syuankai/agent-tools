@@ -28,16 +28,20 @@ async def file_read(
     if os.path.isdir(resolved):
         raise PathError(400, "is_directory", f"Cannot read directory: {path}. Use /file/list instead.")
 
-    # Read in binary first for detection, then decode if text
+    # Read only up to the response limit plus a UTF-8 code point. Reading the
+    # entire file before truncating the response allowed a large text file to
+    # consume unbounded process memory.
+    limit = output_limit()
     try:
         with open(resolved, "rb") as f:
-            raw = f.read()
+            file_size = os.fstat(f.fileno()).st_size
+            raw = f.read(limit + 4)
     except PermissionError:
         raise PathError(403, "permission_denied", f"Cannot read file: {path}")
     except OSError as e:
         raise PathError(500, "read_error", f"Failed to read file: {e}")
 
-    file_size = len(raw)
+    truncated = file_size > len(raw)
 
     # Binary detection
     if is_binary(raw):
@@ -65,12 +69,23 @@ async def file_read(
                 f"Cannot decode file as text: {path}",
             )
 
-    # Check truncation
-    limit = output_limit()
-    truncated = len(content.encode("utf-8", errors="replace")) > limit
+    # Keep the response content within the configured byte limit. Single-byte
+    # fallback encodings may need more bytes when represented as UTF-8 JSON.
+    encoded = content.encode("utf-8", errors="replace")
+    if len(encoded) > limit:
+        truncated = True
+        data = encoded[:limit]
+        while data:
+            try:
+                content = data.decode("utf-8")
+                break
+            except UnicodeDecodeError:
+                data = data[:-1]
+        else:
+            content = ""
+
     if truncated:
-        data = content.encode("utf-8", errors="replace")[:limit]
-        content = data.decode("utf-8", errors="replace") + "\n[output truncated]"
+        content += "\n[output truncated]"
 
     return {
         "status": 200,

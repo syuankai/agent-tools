@@ -7,13 +7,13 @@ AI Agent Tool Server — a FastAPI HTTP tool server for AI agents, packaged in a
 - **Runtime**: Python 3.12 + FastAPI + uvicorn
 - **Frontend**: React + TypeScript + Vite (built into `/app/static/`)
 - **Container**: Ubuntu 24.04, no Node.js in runtime image
-- **Version**: v0.5.0 (structured file tools)
+- **Version**: v0.0.5 (structured file tools)
 
 ## Quick Commands
 
 ### Build
 ```bash
-./build.sh                    # Builds docker image agent-tools:v0.5.0
+./build.sh                    # Builds docker image agent-tools:v0.0.5
 ```
 
 ### Python (no test suite exists)
@@ -29,7 +29,7 @@ cd webcon && npm run lint              # oxlint
 
 ### Docker smoke test
 ```bash
-docker run -d --name test -p 8081:8080 -e API_KEY=test123 agent-tools:v0.5.0
+docker run -d --name test -p 8081:8080 -e API_KEY=test123 agent-tools:v0.0.5
 curl -s http://localhost:8081/health
 curl -s -H "Authorization: Bearer test123" http://localhost:8081/tools
 docker rm -f test
@@ -66,7 +66,7 @@ app/
     command_policy.py  # Blocklist-based command validation
     filepc_policy.py   # /filepc path restrictions
     proc_policy.py     # /proc allowlist
-    path_policy.py     # Structured file tool path validation (NEW v0.5.0)
+    path_policy.py     # Structured file tool path validation (NEW v0.0.5)
 ```
 
 ## Key Security Details
