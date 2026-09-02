@@ -31,7 +31,7 @@ from app import stats
 
 app = FastAPI(
     title="AI Agent Tool Server",
-    version=os.getenv("APP_VERSION", "0.0.4"),
+    version=os.getenv("APP_VERSION", "0.0.5"),
     docs_url=None,
     redoc_url=None,
     openapi_url=None,

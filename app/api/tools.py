@@ -24,7 +24,7 @@ def _tool_defs() -> list[dict]:
     blocked = sorted(blocked_commands())
 
     return [
-        # === Structured File Tools (v0.5.0) ===
+        # === Structured File Tools (v0.0.5) ===
         {
             "name": "file/list",
             "method": "POST",
@@ -496,7 +496,7 @@ def _tool_defs() -> list[dict]:
 async def tools(authorization: str | None = Header(None)):
     auth(authorization)
     return {
-        "version": os.getenv("APP_VERSION", "0.4.5"),
+        "version": os.getenv("APP_VERSION", "0.0.5"),
         "tools": _tool_defs(),
         "global_limits": {
             "rate_limit": f"{_env_int('RATE_LIMIT_REQUESTS', 30)} requests per {_env_int('RATE_LIMIT_WINDOW', 60)} seconds",

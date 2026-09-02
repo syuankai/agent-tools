@@ -1,8 +1,8 @@
-# AI Agent Tool Server v0.5.0
+# AI Agent Tool Server v0.0.5
 
 Lightweight Ubuntu 24.04 HTTP tool server for AI agents.
 
-v0.5.0 adds structured read-only file tools (`/file/list`, `/file/read`, `/file/search`, `/file/metadata`) and system info (`/system/info`), so Agents can operate on files without composing shell commands.
+v0.0.5 adds structured read-only file tools (`/file/list`, `/file/read`, `/file/search`, `/file/metadata`) and system info (`/system/info`), so Agents can operate on files without composing shell commands.
 
 ## Pull the image
 
@@ -21,12 +21,12 @@ docker pull ghcr.io/syuankai/agent-tools:latest
 A version tag can also be used after a Git tag is pushed, for example:
 
 ```bash
-docker pull ghcr.io/syuankai/agent-tools:0.5.0
+docker pull ghcr.io/syuankai/agent-tools:0.0.5
 ```
 
 ## GitHub Actions
 
-Every push to `main` builds and publishes `latest`. A Git tag such as `v0.5.0` publishes version tags as well. The workflow builds both `linux/amd64` and `linux/arm64`, uses the GitHub Actions cache, and publishes SBOM/provenance metadata.
+Every push to `main` builds and publishes `latest`. A Git tag such as `v0.0.5` publishes version tags as well. The workflow builds both `linux/amd64` and `linux/arm64`, uses the GitHub Actions cache, and publishes SBOM/provenance metadata.
 
 The workflow is in:
 
@@ -96,7 +96,7 @@ http://agent-tool-server:8080
 
 ## Volumes
 
-Required for the intended v0.5.0 setup:
+Required for the intended v0.0.5 setup:
 
 ```text
 /var/run/docker.sock:/var/run/docker.sock
@@ -154,7 +154,7 @@ The policy checks command structure rather than only doing a substring search, i
 
 ## Endpoints
 
-### Structured File Tools (v0.5.0)
+### Structured File Tools (v0.0.5)
 
 - `POST /file/list` — list directory contents as structured JSON.
 - `POST /file/read` — read a file's content as structured JSON.

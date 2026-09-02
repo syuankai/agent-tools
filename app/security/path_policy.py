@@ -4,7 +4,7 @@ Provides safe path validation that:
 - Prevents path traversal (..)
 - Prevents prefix collision (/workspace_evil != /workspace)
 - Resolves symlinks and verifies they don't escape allowed roots
-- Works for both read-only (v0.5.0) and future write operations
+- Works for both read-only (v0.0.5) and future write operations
 """
 
 from __future__ import annotations
@@ -136,7 +136,7 @@ def validate_path(path: str, *, require_exists: bool = False) -> str:
 def check_parent_exists(path: str) -> str:
     """Validate that the parent directory of a path exists.
 
-    Useful for future write operations. For v0.5.0 read-only,
+    Useful for future write operations. For v0.0.5 read-only,
     this is not used but available for extension.
 
     Returns:
